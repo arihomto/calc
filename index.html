@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <title>flCalc</title>
+	   <link rel="stylesheet" type="text/css" href="https://cdn.flairy.jp/ring4/lib/fext-3.1.2-1/resources/css/ext-all.css" />
+    	<link rel="stylesheet" type="text/css" href="https://cdn.flairy.jp/ring4/lib/fext-3.1.2-1/resources/css/xtheme-flairy-sylph-green.css"/>
+  
+		<script type="text/javascript" src="https://cdn.flairy.jp/ring4/lib/fext-3.1.2-1/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="https://cdn.flairy.jp/ring4/lib/fext-3.1.2-1/ext-all.js"></script>
+		<script type="text/javascript" src="https://kernel.flairy.jp/~~flairy~~/scripts/flairy.js?nomin"></script>
+		<script type="text/javascript" src="https://kernel.flairy.jp/~~flairy~~/scripts/flake.js?nomin"></script>
+	    <script type="text/javascript" src="https://kernel.flairy.jp/~~flairy~~/scripts/flame.js?nomin"></script>
+
+    <script type="text/javascript">
+    <!--
+      var app ;
+      var exp = "" ;
+      var inputFlg = false ;
+      var ansFlg = false ;
+      var dsp ;
+      var btns =
+          {
+          "0" : { id: "NUM_0",   text: "0", clickEvent: onNumClick } ,
+          "1" : { id: "NUM_1",   text: "1", clickEvent: onNumClick } ,
+          "2" : { id: "NUM_2",   text: "2", clickEvent: onNumClick } ,
+          "3" : { id: "NUM_3",   text: "3", clickEvent: onNumClick } ,
+          "4" : { id: "NUM_4",   text: "4", clickEvent: onNumClick } ,
+          "5" : { id: "NUM_5",   text: "5", clickEvent: onNumClick } ,
+          "6" : { id: "NUM_6",   text: "6", clickEvent: onNumClick } ,
+          "7" : { id: "NUM_7",   text: "7", clickEvent: onNumClick } ,
+          "8" : { id: "NUM_8",   text: "8", clickEvent: onNumClick } ,
+          "9" : { id: "NUM_9",   text: "9", clickEvent: onNumClick } ,
+          "." : { id: "NUM_DOT", text: ".", clickEvent: onNumClick } ,
+          "+" : { id: "OPE_ADD", text: "+", clickEvent: onOpeClick } ,
+          "-" : { id: "OPE_SUB", text: "-", clickEvent: onOpeClick } ,
+          "*" : { id: "OPE_MUL", text: "*", clickEvent: onOpeClick } ,
+          "/" : { id: "OPE_DIV", text: "/", clickEvent: onOpeClick } ,
+          "=" : { id: "OPE_EQ",  text: "=", clickEvent: onOpeClick } ,
+          "C" : { id: "OPE_AC",  text: "C", clickEvent: onOpeClick } 
+          } ;
+      var exKeys =
+          {
+          27  : "C" , // [ESC]
+          "c" : "C" ,
+          13  : "="   // [Enter]
+          } ;
+      var CSS_BTN_OVER_CLS = "x-btn-over" ;
+      var BTN_OVER_DELAY = 100 ;
+      
+      Ext.onReady(function()
+          {
+          app = new Flame.Application({meta: {title: "電卓"}});
+          
+          for ( var key in btns )
+              {
+              var btn = btns[key] ;
+              btn.obj = new Ext.Button( {
+                            renderTo   : btn.id ,
+                            handler    : btn.clickEvent,
+                            text       : btn.text,
+                            height     : 24 ,
+                            minWidth   : 32
+                            }) ;
+              } ;
+          
+          dsp = new Ext.form.TextField( {
+              renderTo   : "DSP" ,
+              readOnly   : true,
+              value      : "0",
+              height     : 24 ,
+              maxLength  : 15 ,
+              minWidth   : 32 * 3 ,
+              style      : "text-align: right;"
+              }) ;
+          
+          Ext.getDoc().on( "keypress" ,  onKeyPress ) ;
+          });
+      
+      function onNumClick(btn)
+          {
+          if( inputFlg )
+              {
+              if( btn.text == "." )
+                  {
+                  if( dsp.getValue().indexOf(".") >= 0 ) return ;
+                  }
+              setText( dsp , dsp.getValue() + btn.text ) ;
+              }
+          else
+              {
+              if( btn.text == "." ) setText( dsp , "0" + btn.text ) ;
+              if( btn.text == "0" ) return ;
+              else                  setText( dsp , btn.text ) ;
+              inputFlg = true ;
+              ansFlag = false 
+              }
+          }
+      
+      function onOpeClick(btn)
+          {
+          var ans ;
+          
+          if( btn.text == "C" )
+              {
+              setText( dsp , "0" ) ;
+              exp = "" ;
+              inputFlg = false ;
+              return ;
+              }
+          
+          if( !ansFlg && !inputFlg ) return ;
+          ansFlg = false ;
+          
+          switch( btn.text )
+              {
+              case "=" :
+                  ans = calcExp( exp + dsp.getValue() ) ;
+                  exp = "" ;
+                  setText( dsp , ans ) ;
+                  inputFlg = false ;
+                  ansFlg = true ;
+                  break ;
+              
+              default :
+                  ans = calcExp( exp + dsp.getValue() ) ;
+                  exp = "(" + ans + ")" + btn.text;
+                  setText( dsp , ans ) ;
+                  inputFlg = false ;
+                  break ;
+              }
+          }
+      
+      function onKeyPress()
+          {
+          var event = Ext.EventObject ;
+          //document.getElementById("DBG").value = "[" + event.getCharCode() + "," + event.getKey() + "]" ;
+          
+          var c ;
+          if( event.getCharCode() == 0 )
+              {
+              c = exKeys[event.getKey()] ;
+              }
+          else
+              {
+              var tmp ;
+              c = String.fromCharCode(event.getCharCode()) ;
+              tmp = exKeys[c] ;
+              if( tmp ) c = tmp ;
+              else
+                  {
+                  tmp = exKeys[event.getKey()] ;
+                  if( tmp ) c = tmp ;
+                  }
+              }
+          
+          var btn = btns[c] ;
+          if( ! btn ) return true ;
+          
+          btn.obj.addClass( CSS_BTN_OVER_CLS ) ;
+          btn.clickEvent( btn.obj ) ;
+          new Ext.util.DelayedTask(function()
+              {
+              btn.obj.removeClass( CSS_BTN_OVER_CLS ) ;
+              } ).delay(BTN_OVER_DELAY) ;
+          
+          event.stopEvent() ;
+          
+          return false ;
+          }
+      
+      function calcExp(expStr)
+          {
+          if( expStr == "" ) return 0 ;
+          return eval(expStr) ;
+          }
+      
+      function setText(txt, v)
+          {
+          var s = "" + v
+          if( s.length > txt.maxLength )
+              {
+              txt.setValue( s.substr(0, txt.maxLength) ) ;
+              }
+          else
+              {
+              txt.setValue( s ) ;
+              }
+          }
+      
+      // -->
+    </script>
+  </head>
+
+  <body style="background-color:#EEEEEE">
+    <div id="CALC">
+      <table>
+        <tr>
+          <td colspan="3"><div id="DSP"></div></td>
+          <td><div id="OPE_AC"></div></td>
+        </tr>
+        <tr>
+          <td><div id="NUM_7"></div></td>
+
+          <td><div id="NUM_8"></div></td>
+          <td><div id="NUM_9"></div></td>
+          <td><div id="OPE_DIV"></div></td>
+        </tr>
+        <tr>
+          <td><div id="NUM_4"></div></td>
+          <td><div id="NUM_5"></div></td>
+          <td><div id="NUM_6"></input></td>
+          <td><div id="OPE_MUL"></div></td>
+
+        </tr>
+        <tr>
+          <td><div id="NUM_1"></div></td>
+          <td><div id="NUM_2"></div></td>
+          <td><div id="NUM_3"></div></td>
+          <td><div id="OPE_SUB"></div></td>
+        </tr>
+        <tr>
+          <td><div id="NUM_0"></div></td>
+
+          <td><div id="NUM_DOT"></div></td>
+          <td><div id="OPE_EQ"></div></td>
+          <td><div id="OPE_ADD"></div></td>
+        </tr>
+      </table>
+      <!-- KEY <input type="text" id="DBG"> -->
+    </div>
+  </body>
+</html>
+
