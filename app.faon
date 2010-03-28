@@ -2,8 +2,8 @@
 faonVersion : "1.0",
 version     : "1.0.0",
 target: "https://calc.flairy.jp/",
-	owner: "http://takaxi.vo-id.org/",
-	signature: "040407c41767264b9a476542b82dce285705fb7a54a59c9c42339afec9e1be5534275fed11abdc40d79faddeb1c3185008b5a1d87f3703a8113acb9298d4a12c",
+	owner: "http://arihomto.vo-id.org/",
+	signature: "1dbe6c0b55ae30df234719e25701211e4c1a1e9abf62aae0f56c178cbbf79b21c5c5e612103b7d318ec8dd686c664d80c50aa8e899aa3b8a618dcb72341d72b9",
 
 
 title       : "電卓",
